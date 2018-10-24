@@ -62,7 +62,9 @@ if args.server is None:
 else:
     is_server = 0
     init_str = args.server
-
+a = 'a'
+b = ucp.py_dummy(a)
+print(b)
 ## setup endpoints
 ucp.init(init_str.encode(), server_accept_callback, is_server, server_listens = 1)
 server_ep = None

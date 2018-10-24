@@ -263,3 +263,8 @@ def destroy_ep(ucp_ep):
 
 def barrier():
     return barrier_sock()
+
+import sys
+def py_dummy(a):
+    print(hex(id(a)))
+    return <object> dummy_fxn(<void *> a, sys.getsizeof(a))

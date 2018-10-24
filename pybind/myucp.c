@@ -297,6 +297,14 @@ static void flush_callback(void *request, ucs_status_t status)
 {
 }
 
+void *dummy_fxn(void *a, int size)
+{
+    void *b = NULL;
+    b = (void *) malloc(size);
+    memcpy(b, a, size);
+    return b;
+}
+
 static ucs_status_t flush_ep(ucp_worker_h worker, ucp_ep_h ep)
 {
     void *request;

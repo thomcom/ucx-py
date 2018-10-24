@@ -15,6 +15,7 @@ struct ucx_context {
     int             completed;
 };
 
+void *dummy_fxn(void *, int);
 int init_ucp(char *, int, server_accept_cb_func, void *, int);
 int fin_ucp(void);
 char *get_peer_hostname();
@@ -25,7 +26,6 @@ int put_ep(ucp_ep_h *);
 int wait_for_connection();
 int setup_ep_ucp(void);
 int destroy_ep_ucp(void);
-int dummy(int);
 
 int set_device(int device);
 struct data_buf *allocate_host_buffer(int length);
