@@ -385,6 +385,66 @@ err_ep:
     return request;
 }
 
+struct ucx_context *send_nb_ucp_bytes(void *buf, int length)
+{
+    ucs_status_t status;
+    ucp_ep_params_t ep_params;
+    struct ucx_context *request = 0;
+    int i = 0;
+
+    printf("send_nb_ucp_bytes(void *buf = %p\n", buf);
+
+    if (NULL != server_context.ep) comm_ep = server_context.ep; // for now
+
+    request = ucp_tag_send_nb(comm_ep, buf, length,
+                              ucp_dt_make_contig(1), tag,
+                              send_handle);
+    if (UCS_PTR_IS_ERR(request)) {
+        fprintf(stderr, "unable to send UCX data message\n");
+        goto err_ep;
+    } else if (UCS_PTR_STATUS(request) != UCS_OK) {
+        DEBUG_PRINT("UCX data message was scheduled for send\n");
+    } else {
+        /* request is complete so no need to wait on request */
+    }
+
+    DEBUG_PRINT("returning request %p\n", request);
+
+    return request;
+
+err_ep:
+    ucp_ep_destroy(comm_ep);
+    return request;
+}
+
+struct ucx_context *recv_nb_ucp_bytes(void *buf, int length)
+{
+    ucs_status_t status;
+    ucp_ep_params_t ep_params;
+    struct ucx_context *request = 0;
+    int errs = 0;
+    int i;
+
+    printf("recv_nb_ucp_bytes(void *buf = %p\n", buf);
+
+    request = ucp_tag_recv_nb(ucp_worker, buf, length,
+                              ucp_dt_make_contig(1), tag,
+                              tag_mask, recv_handle);
+
+    DEBUG_PRINT("returning request %p\n", request);
+
+    if (UCS_PTR_IS_ERR(request)) {
+        fprintf(stderr, "unable to receive UCX data message (%u)\n",
+                UCS_PTR_STATUS(request));
+        goto err_ep;
+    }
+
+    return request;
+
+err_ep:
+    return request;
+}
+
 int ucp_py_ep_post_probe()
 {
     return num_probes_outstanding++;
@@ -468,6 +528,38 @@ struct ucx_context *ucp_py_ep_send(ucp_ep_h *ep_ptr, struct data_buf *send_buf,
     DEBUG_PRINT("sending %p\n", send_buf->buf);
 
     request = ucp_tag_send_nb(*ep_ptr, send_buf->buf, length,
+                              ucp_dt_make_contig(1), tag,
+                              send_handle);
+    if (UCS_PTR_IS_ERR(request)) {
+        fprintf(stderr, "unable to send UCX data message\n");
+        goto err_ep;
+    } else if (UCS_PTR_STATUS(request) != UCS_OK) {
+        DEBUG_PRINT("UCX data message was scheduled for send\n");
+    } else {
+        /* request is complete so no need to wait on request */
+    }
+
+    DEBUG_PRINT("returning request %p\n", request);
+
+    return request;
+
+err_ep:
+    ucp_ep_destroy(*ep_ptr);
+    return request;
+}
+
+struct ucx_context *send_nb_ucp_ep_bytes(ucp_ep_h *ep_ptr, void *buf, int length)
+{
+    ucs_status_t status;
+    ucp_ep_params_t ep_params;
+    struct ucx_context *request = 0;
+    int i = 0;
+
+    printf("EP send : %p\n", ep_ptr);
+
+    DEBUG_PRINT("sending %p\n", buf);
+
+    request = ucp_tag_send_nb(*ep_ptr, buf, length,
                               ucp_dt_make_contig(1), tag,
                               send_handle);
     if (UCS_PTR_IS_ERR(request)) {

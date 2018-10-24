@@ -2,6 +2,8 @@
 # See file LICENSE for terms.
 
 import concurrent.futures
+import sys
+import pickle
 from weakref import WeakValueDictionary
 
 cdef extern from "myucp.h":
@@ -56,8 +58,12 @@ class CommFuture(concurrent.futures.Future):
 cdef class ucp_py_ep:
     cdef ucp_ep_h* ucp_ep
     cdef int ptr_set
+    cdef ucx_context* ctx_ptr
+    cdef int ctx_ptr_set
+    cdef void* obj_bytes_ptr
 
     def __cinit__(self):
+        self.ctx_ptr_set = 0
         return
 
     def connect(self, ip, port):
@@ -81,6 +87,25 @@ cdef class ucp_py_ep:
 
     def send(self, ucp_msg msg, len):
         return msg.send_ft(self, len)
+
+    def send_pickle(self, obj):
+        obj_bytes = pickle.dumps(obj)
+        self.ctx_ptr = send_nb_ucp_ep_bytes(self.ucp_ep, <void *> obj_bytes, sys.getsizeof(obj_bytes))
+        self.ctx_ptr_set = 1
+        obj_bytes_ptr = <void *> obj_bytes
+        return obj_bytes
+
+    def recv_pickle(self, obj):
+        obj_bytes = pickle.dumps(obj)
+        self.ctx_ptr = recv_nb_ucp_bytes(<void *> obj_bytes, sys.getsizeof(obj_bytes))
+        self.ctx_ptr_set = 1
+        obj_bytes_ptr = <void *> obj_bytes
+        return obj_bytes
+
+    def wait_pickle(self, obj_bytes):
+        if 1 == self.ctx_ptr_set:
+            wait_request_ucp(self.ctx_ptr)
+            return pickle.loads(obj_bytes)
 
     def close(self):
         return put_ep(self.ucp_ep)
@@ -264,7 +289,6 @@ def destroy_ep(ucp_ep):
 def barrier():
     return barrier_sock()
 
-import sys
 def py_dummy(a):
     print(hex(id(a)))
     return <object> dummy_fxn(<void *> a, sys.getsizeof(a))
