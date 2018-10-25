@@ -88,24 +88,17 @@ cdef class ucp_py_ep:
     def send(self, ucp_msg msg, len):
         return msg.send_ft(self, len)
 
-    def send_pickle(self, obj):
-        obj_bytes = pickle.dumps(obj)
-        self.ctx_ptr = send_nb_ucp_ep_bytes(self.ucp_ep, <void *> obj_bytes, sys.getsizeof(obj_bytes))
+    def send_pickle(self, obj_bytes, len):
+        self.ctx_ptr = send_nb_ucp_ep_bytes(self.ucp_ep, <void *> obj_bytes, len)
         self.ctx_ptr_set = 1
-        obj_bytes_ptr = <void *> obj_bytes
-        return obj_bytes
 
-    def recv_pickle(self, obj):
-        obj_bytes = pickle.dumps(obj)
-        self.ctx_ptr = recv_nb_ucp_bytes(<void *> obj_bytes, sys.getsizeof(obj_bytes))
+    def recv_pickle(self, obj_bytes, len):
+        self.ctx_ptr = recv_nb_ucp_bytes(<void *> obj_bytes, len)
         self.ctx_ptr_set = 1
-        obj_bytes_ptr = <void *> obj_bytes
-        return obj_bytes
 
-    def wait_pickle(self, obj_bytes):
+    def wait_pickle(self):
         if 1 == self.ctx_ptr_set:
             wait_request_ucp(self.ctx_ptr)
-            return pickle.loads(obj_bytes)
 
     def close(self):
         return put_ep(self.ucp_ep)

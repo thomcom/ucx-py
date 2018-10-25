@@ -4,20 +4,25 @@
 import call_myucp as ucp
 import time
 import argparse
+import pickle
+import sys
 
 def send_recv(ep, msg_log, is_server, is_cuda):
     my_list = []
-    list_bytes = None
+    obj_bytes = None
     if 1 == is_server:
         my_list = [1, 2, 3, 4]
-        #print(my_list)
-        list_bytes = ep.send_pickle(my_list)
+        print('sender :' + str(my_list))
+        obj_bytes = pickle.dumps(my_list)
+        ep.send_pickle(obj_bytes, sys.getsizeof(obj_bytes))
     else:
         my_list = [5, 6, 7, 8]
-        #print(my_list)
-        list_bytes = ep.recv_pickle(my_list)
-    my_new_list = ep.wait_pickle(list_bytes)
-    print(my_new_list)
+        print('receiver :' + str(my_list))
+        obj_bytes = pickle.dumps(my_list)
+        ep.recv_pickle(obj_bytes, sys.getsizeof(obj_bytes))
+    ep.wait_pickle()
+    my_new_list = pickle.loads(obj_bytes)
+    print('new :' + str(my_new_list))
 
 accept_cb_started = 0
 new_client_ep = None
