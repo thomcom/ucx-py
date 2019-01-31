@@ -98,6 +98,7 @@ class ListenerFuture(concurrent.futures.Future):
             return self.result_state
         else:
             while False == self.done_state:
+                time.sleep(0.001)
                 if True == self.done():
                     return self.result_state
                 else:
@@ -486,3 +487,26 @@ def get_obj_from_msg(msg):
     """
 
     return msg.get_obj()
+
+
+class SleepFuture(asyncio.Future):
+
+    def __init__(self, delay):
+        self.delay = delay
+        super(SleepFuture, self).__init__()
+
+    """
+    def __await__(self):
+        self.set_result(self.delay)
+        return self
+   """
+
+    async def wait(self):
+        self.set_result(self.delay)
+        await (<object> ucp_py_sleep(self.delay, <void *> self))
+
+async def go_sleep(delay):
+    print("calling ucp_py_sleep")
+    sleep_future = SleepFuture(delay)
+    loop = asyncio.get_running_loop()
+    await loop.create_task(sleep_future.wait())

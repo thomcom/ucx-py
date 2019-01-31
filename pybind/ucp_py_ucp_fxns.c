@@ -566,7 +566,7 @@ int ucp_py_listen(listener_accept_cb_func pyx_cb, void *py_cb, int port)
     ucp_py_ctx_head->listener_context.py_cb = py_cb;
     ucp_py_ctx_head->listens = 1;
     default_listener_port = (port == -1 ? default_listener_port : port);
-    
+
     status = start_listener(ucp_py_ctx_head->ucp_worker,
                             &ucp_py_ctx_head->listener_context,
                             &ucp_py_ctx_head->listener,
@@ -589,4 +589,12 @@ int ucp_py_finalize()
 
     DEBUG_PRINT("UCP resources released\n");
     return 0;
+}
+
+void *ucp_py_sleep(int delay, void *ret)
+{
+    printf("in ucp_py_sleep for %d secs\n", delay);
+    sleep(delay);
+    printf("done sleeping for %d secs\n", delay);
+    return ret;
 }

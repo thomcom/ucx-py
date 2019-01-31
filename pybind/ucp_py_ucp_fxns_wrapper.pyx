@@ -14,3 +14,4 @@ cdef extern from "ucp_py_ucp_fxns.h":
     int ucp_py_probe_query(void*)
     int ucp_py_probe_wait(void*)
     int ucp_py_query_request(ucx_context*)
+    void* ucp_py_sleep(int, void*)

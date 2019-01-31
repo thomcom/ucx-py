@@ -42,5 +42,5 @@ if __name__ == '__main__':
     if len(sys.argv) == 2:
         host = sys.argv[1].encode()
     else:
-        host = b"192.168.40.19"
+        host = b"10.149.160.3"
     asyncio.run(main(host)) 

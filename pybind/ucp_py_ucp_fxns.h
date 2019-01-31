@@ -36,3 +36,4 @@ int ucp_py_ep_post_probe();
 int ucp_py_probe_query(void *ep_ptr);
 int ucp_py_probe_wait(void *ep_ptr);
 int ucp_py_query_request(struct ucx_context *request);
+void *ucp_py_sleep(int delay, void *ret);
