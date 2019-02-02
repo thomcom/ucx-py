@@ -73,10 +73,12 @@ class ListenerFuture(concurrent.futures.Future):
 
     _instances = WeakValueDictionary()
 
-    def __init__(self, cb):
+    def __init__(self, cb, is_coroutine = False):
         self.done_state = False
         self.result_state = None
         self.cb = cb
+        self.is_coroutine = is_coroutine
+        self.coroutine = None
         self._instances[id(self)] = self
         super(ListenerFuture, self).__init__()
 
@@ -328,18 +330,16 @@ cdef class ucp_comm_request:
                 else:
                     yield
 
-accept_cb_is_coroutine = False
-sf_instance = None
 
-cdef void accept_callback(void *client_ep_ptr, void *f):
-    global accept_cb_is_coroutine
+cdef void accept_callback(void *client_ep_ptr, void *lf):
     client_ep = ucp_py_ep()
     client_ep.ucp_ep = client_ep_ptr
-    if not accept_cb_is_coroutine:
-        (<object>f)(client_ep) #sign py_func(ucp_py_ep()) expected
+    listener_instance = (<object> lf)
+    if not listener_instance.is_coroutine:
+        (listener_instance.cb)(client_ep)
     else:
         current_loop = asyncio.get_running_loop()
-        current_loop.create_task((<object>f)(client_ep))
+        current_loop.create_task((listener_instance.cb)(client_ep))
 
 def init():
     """Initiates ucp resources like ucp_context and ucp_worker
@@ -374,23 +374,19 @@ def start_listener(py_func, listener_port = -1, is_coroutine = False):
     -------
     0 if listener successfully started
     """
+    lf = ListenerFuture(py_func, is_coroutine)
 
-    global accept_cb_is_coroutine
-    global sf_instance
-    accept_cb_is_coroutine = is_coroutine
     if is_coroutine:
-        sf = ListenerFuture(py_func)
         async def async_start_listener():
-            await sf
-        if 0 == ucp_py_listen(accept_callback, <void *>py_func, listener_port):
-            sf_instance = sf
-            return async_start_listener()
-        else:
-            return -1
-    else:
-        return ucp_py_listen(accept_callback, <void *>py_func, listener_port)
+            await lf
+        lf.coroutine = async_start_listener()
 
-def stop_listener():
+    if 0 == ucp_py_listen(accept_callback, <void *> lf, listener_port):
+        return lf
+    else:
+        return None
+
+def stop_listener(lf):
     """Stop listening for incoming connections
 
     Parameters
@@ -402,8 +398,8 @@ def stop_listener():
     None
     """
 
-    if sf_instance is not None:
-        sf_instance.done_state = True
+    if lf.is_coroutine:
+        lf.done_state = True
 
 def fin():
     """Release ucp resources like ucp_context and ucp_worker
