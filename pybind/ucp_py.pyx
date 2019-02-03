@@ -79,6 +79,7 @@ class ListenerFuture(concurrent.futures.Future):
         self.cb = cb
         self.is_coroutine = is_coroutine
         self.coroutine = None
+        self.ucp_listener = None
         self._instances[id(self)] = self
         super(ListenerFuture, self).__init__()
 
@@ -203,6 +204,9 @@ cdef class ucp_py_ep:
 
     def close(self):
         return ucp_py_put_ep(self.ucp_ep)
+
+cdef class ucp_listener:
+    cdef void* listener_ptr
 
 cdef class ucp_msg:
     """A class that represents the message associated with a
@@ -336,10 +340,10 @@ cdef void accept_callback(void *client_ep_ptr, void *lf):
     client_ep.ucp_ep = client_ep_ptr
     listener_instance = (<object> lf)
     if not listener_instance.is_coroutine:
-        (listener_instance.cb)(client_ep)
+        (listener_instance.cb)(client_ep, listener_instance)
     else:
         current_loop = asyncio.get_running_loop()
-        current_loop.create_task((listener_instance.cb)(client_ep))
+        current_loop.create_task((listener_instance.cb)(client_ep, listener_instance))
 
 def init():
     """Initiates ucp resources like ucp_context and ucp_worker
@@ -374,6 +378,7 @@ def start_listener(py_func, listener_port = -1, is_coroutine = False):
     -------
     0 if listener successfully started
     """
+    listener = ucp_listener()
     lf = ListenerFuture(py_func, is_coroutine)
 
     if is_coroutine:
@@ -381,7 +386,9 @@ def start_listener(py_func, listener_port = -1, is_coroutine = False):
             await lf
         lf.coroutine = async_start_listener()
 
-    if 0 == ucp_py_listen(accept_callback, <void *> lf, listener_port):
+    listener.listener_ptr = ucp_py_listen(accept_callback, <void *> lf, listener_port)
+    if <void *> NULL != listener.listener_ptr:
+        lf.ucp_listener = listener
         return lf
     else:
         return None
@@ -398,8 +405,11 @@ def stop_listener(lf):
     None
     """
 
+    cdef ucp_listener listener
     if lf.is_coroutine:
         lf.done_state = True
+    listener = lf.ucp_listener
+    ucp_py_stop_listener(listener.listener_ptr)
 
 def fin():
     """Release ucp resources like ucp_context and ucp_worker

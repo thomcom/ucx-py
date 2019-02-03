@@ -558,31 +558,40 @@ int ucp_py_init()
     return -1;
 }
 
-int ucp_py_listen(listener_accept_cb_func pyx_cb, void *py_cb, int port)
+void *ucp_py_listen(listener_accept_cb_func pyx_cb, void *py_cb, int port)
 {
     ucs_status_t status;
+    ucp_listener_h *listener;
 
     ucp_py_ctx_head->listener_context.pyx_cb = pyx_cb;
     ucp_py_ctx_head->listener_context.py_cb = py_cb;
     ucp_py_ctx_head->listens = 1;
     default_listener_port = (port == -1 ? default_listener_port : port);
-    
+
+    listener = (ucp_listener_h *) malloc(sizeof(ucp_listener_h));
+
     status = start_listener(ucp_py_ctx_head->ucp_worker,
                             &ucp_py_ctx_head->listener_context,
-                            &ucp_py_ctx_head->listener,
+                            listener,
                             default_listener_port);
     CHKERR_JUMP(UCS_OK != status, "failed to start listener", err_worker);
 
-    return 0;
+    return (void *) listener;
 
  err_worker:
     ucp_cleanup(ucp_py_ctx_head->ucp_context);
-    return -1;
+    return NULL;
+}
+
+int ucp_py_stop_listener(void *listener)
+{
+    ucp_listener_destroy(*((ucp_listener_h *) listener));
+    free(listener);
+    return 0;
 }
 
 int ucp_py_finalize()
 {
-    if (ucp_py_ctx_head->listens) ucp_listener_destroy(ucp_py_ctx_head->listener);
     ucp_worker_destroy(ucp_py_ctx_head->ucp_worker);
     ucp_cleanup(ucp_py_ctx_head->ucp_context);
     free(np_free);
