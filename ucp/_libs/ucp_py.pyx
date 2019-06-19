@@ -253,7 +253,7 @@ cdef class Endpoint:
         -------
         CommRequest object
         """
-        msg.ctx_ptr = ucp_py_recv_nb(self.ep, msg.buf, len)
+        msg.ctx_ptr = ucp_py_ep_recv_nb(self.ep, msg.buf, len)
         return msg.get_comm_request(len)
 
     def send_fast(self, Message msg, len):
@@ -270,7 +270,7 @@ cdef class Endpoint:
     def _recv(self, BufferRegion buf_reg, int nbytes, name):
         # helper for recv_obj, recv_into
         msg = Message(buf_reg, name=name)
-        msg.ctx_ptr = ucp_py_recv_nb(self.ep, msg.buf, nbytes)
+        msg.ctx_ptr = ucp_py_ep_recv_nb(self.ep, msg.buf, nbytes)
         msg.ep = self.ep
         msg.comm_len = nbytes
         msg.ctx_ptr_set = 1
@@ -496,7 +496,7 @@ cdef class Message:
         if -1 != len:
             self.alloc_host(len)
             self.internally_allocated = 1
-            self.ctx_ptr = ucp_py_recv_nb(self.ep, self.buf, len)
+            self.ctx_ptr = ucp_py_ep_recv_nb(self.ep, self.buf, len)
             self.comm_len = len
             self.ctx_ptr_set = 1
             return len
@@ -510,7 +510,7 @@ cdef class Message:
             if -1 != len:
                 self.alloc_host(len)
                 self.internally_allocated = 1
-                self.ctx_ptr = ucp_py_recv_nb(self.ep, self.buf, len)
+                self.ctx_ptr = ucp_py_ep_recv_nb(self.ep, self.buf, len)
                 self.comm_len = len
                 self.ctx_ptr_set = 1
                 return ucp_py_query_request(self.ctx_ptr)
@@ -790,6 +790,12 @@ def destroy_ep(ep):
     0 if successful
     """
 
+    # Handshake to make sure that other end has completed
+    #x = 'fin'
+    #fin_msg = bytes(x, encoding='utf-8')
+    #fin_msg = memoryview(fin_msg)
+    #await ep.send_obj(fin_msg)
+    #await ep.recv_obj(len(fin_msg))
     ep.close()
 
 def set_cuda_dev(dev):

@@ -245,7 +245,7 @@ static unsigned ucp_ipy_worker_progress(ucp_worker_h ucp_worker)
     exit(-1);
 }
 
-struct ucx_context *ucp_py_recv_nb(void *internal_ep, struct data_buf *recv_buf, int length)
+struct ucx_context *ucp_py_ep_recv_nb(void *internal_ep, struct data_buf *recv_buf, int length)
 {
     ucp_tag_t tag;
     struct ucx_context *request = 0;
@@ -692,7 +692,6 @@ int ucp_py_put_ep(void *internal_ep)
     free(ep_ptr);
     free(internal_ep);
     DEBUG_PRINT("ep closed\n");
-    /* TODO: handle failure, raise exception? */
     return 0;
 }
 

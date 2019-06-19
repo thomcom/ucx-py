@@ -22,7 +22,7 @@ cdef extern from "src/ucp_py_ucp_fxns.h":
     void* ucp_py_get_ep(char *, int)
     int ucp_py_put_ep(void *)
     ucx_context* ucp_py_ep_send_nb(void*, data_buf*, int)
-    ucx_context* ucp_py_recv_nb(void*, data_buf*, int)
+    ucx_context* ucp_py_ep_recv_nb(void*, data_buf*, int)
     int ucp_py_ep_post_probe()
     int ucp_py_probe_query(void*)
     int ucp_py_probe_query_wo_progress(void*)
