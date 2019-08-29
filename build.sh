@@ -6,7 +6,9 @@
 # ## Conda Dependencies ##
 #########################
 
-conda install -c conda-forge automake make cmake libtool pkg-config pytest-asncio cupy
+conda install -y -c conda-forge automake make cmake libtool pkg-config cupy
+
+conda install -y pytest-asyncio
 
 #########################
 # cudf
