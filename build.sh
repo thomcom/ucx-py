@@ -12,7 +12,7 @@ conda install -c conda-forge automake make cmake libtool pkg-config pytest-asnci
 # cudf
 #########################
 
-git clone git@github.com:rapidsai/cudf.git
+git clone https://github.com/rapidsai/cudf
 cd cudf
 export CUDA_HOME=/usr/local/cuda-9.2
 export CUDACXX=$CUDA_HOME/bin/nvcc
@@ -25,7 +25,7 @@ cd ..
 # dask
 #########################
 
-git clone git@github.com:rapidsai/dask.git
+git clone https://github.com/rapidsai/dask
 cd dask
 pip install -e .
 cd ..
@@ -34,7 +34,7 @@ cd ..
 # dask-cuda
 #########################
 
-git clone git@github.com:rapidsai/dask-cuda.git
+git clone https://github.com/rapidsai/dask-cuda
 cd dask-cuda
 pip install -e .
 cd ..
@@ -59,7 +59,7 @@ cd ../..
 # ucx-py
 #########################
 
-git clone git@github.com:rapidsai/ucx-py.git
+git clone https://github.com/rapidsai/ucx-py
 cd ucx-py
 export UCX_PATH=$CONDA_PREFIX
 make install
