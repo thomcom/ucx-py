@@ -6,8 +6,7 @@
 # ## Conda Dependencies ##
 #########################
 
-conda install -y -c conda-forge automake make cmake libtool pkg-config cupy
-
+conda install -y -c conda-forge automake make cmake libtool pkg-config cupy setuptools
 conda install -y pytest-asyncio
 
 #########################
@@ -19,7 +18,7 @@ cd cudf
 export CUDA_HOME=/usr/local/cuda-9.2
 export CUDACXX=$CUDA_HOME/bin/nvcc
 conda env create --name cudf_dev_92 --file conda/environments/cudf_dev_cuda9.2.yml
-conda activate cudf_dev_92
+source activate cudf_dev_92
 ./build.sh
 cd ..
 
@@ -27,7 +26,7 @@ cd ..
 # dask
 #########################
 
-git clone https://github.com/rapidsai/dask
+git clone https://github.com/dask/dask
 cd dask
 pip install -e .
 cd ..
@@ -47,7 +46,7 @@ cd ..
 
 git clone https://github.com/openucx/ucx
 cd ucx
-git remote add Akshay-Venkatesh git@github.com:Akshay-Venkatesh/ucx.git
+git remote add Akshay-Venkatesh https://github.com/Akshay-Venkatesh/ucx.git
 git remote update Akshay-Venkatesh
 git checkout ucx-cuda
 ./autogen.sh
