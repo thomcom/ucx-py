@@ -195,7 +195,6 @@ static unsigned ucp_ipy_worker_progress(ucp_worker_h ucp_worker)
     lat = (e.tv_usec - s.tv_usec) + (1E+6 * (e.tv_sec - s.tv_sec));
     fprintf(stderr, "progress %lf us\n", lat);
 #endif
-    DEBUG_PRINT("called ucp_worker_progress\n");
 
     while (cb_used_head.tqh_first != NULL) {
         //handle python callbacks
